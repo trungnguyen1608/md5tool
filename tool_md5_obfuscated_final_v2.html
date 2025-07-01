@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Tool MD5 by Lương Trung - Quản lý Member</title>
+  <style>
+    body { font-family: Arial; padding: 20px; text-align: center; }
+    input, button, select { padding: 10px; margin: 6px; width: 300px; font-size: 16px; }
+    #main, #adminPanel, #loading, #timer, #note, #result, #percent, #details { display: none; }
+    #adminPanel { margin-top: 30px; text-align: left; }
+    table { width: 100%; margin-top: 15px; border-collapse: collapse; }
+    th, td { border: 1px solid #ccc; padding: 6px; text-align: center; font-size: 14px; }
+    th { background: #f0f0f0; }
+    #note { color: #888; font-style: italic; }
+  </style>
+</head>
+<body><p style="margin-top: 40px; font-size: 14px;">
+  ❓ Liên hệ admin tại Facebook:
+  <a href="https://www.facebook.com/carinebaybe?locale=vi_VN" target="_blank">
+    facebook.com/carinebaybe
+  </a>
+</p>
+
+  <h2>Tool MD5 by Lương Trung</h2>
+
+  <div id="login">
+    <input type="text" id="username" placeholder="Tên đăng nhập">
+    <input type="text" id="userkey" placeholder="Nhập KEY">
+    <br><button onclick="login()">Đăng nhập</button>
+    <p id="loginError" style="color:red;"></p>
+
+    <h3>Hoặc đăng ký tài khoản mới</h3>
+    <input type="text" id="regUser" placeholder="Tên đăng ký mới">
+    <input type="text" id="regKey" placeholder="Nhập KEY mong muốn">
+    <br><button onclick="register()">Đăng ký</button>
+    <p id="regMsg" style="color: green;"></p>
+  </div>
+
+  <div id="main">
+    <p id="timer"></p>
+    <input type="text" id="md5Input" placeholder="Nhập mã MD5 (32 ký tự hex)">
+    <br><button onclick="analyze()">Phân tích & Dự đoán</button>
+    <p id="loading">Đang xử lý, vui lòng đợi...</p>
+    <h3 id="result">Kết quả: …</h3>
+    <h4 id="percent">Xác suất: …</h4><p style="color: red; font-weight: bold; font-size: 16px;">
+  ⚠️ Lưu ý: Tool sẽ không <u>ăn được 100%</u> đâu nha!
+</p>
+
+    <div id="details"></div>
+    <p id="note">Tool by Lương Trung — Tool sẽ không báo được đúng 100% đâu nhé.</p>
+  </div>
+
+  <div id="adminPanel">
+    <h3>🔐 Quản lý thành viên</h3>
+    <input type="text" id="newUser" placeholder="Tên thành viên">
+    <input type="text" id="newKey" placeholder="KEY thành viên">
+    <select id="hours">
+      <option value="24">24 giờ</option>
+      <option value="48">48 giờ</option>
+      <option value="72">72 giờ</option>
+    </select><select id="hours">
+  <option value="0.17">10 phút</option>
+  <option value="24">24 giờ</option>
+  <option value="48">48 giờ</option>
+  <option value="72">72 giờ</option>
+</select>
+
+    <button onclick="addMember()">Thêm thành viên</button>
+    <table>
+      <thead><tr><th>User</th><th>KEY</th><th>Thời gian hết hạn</th></tr></thead>
+      <tbody id="userTable"></tbody>
+    </table>
+  </div>
+
+<script>eval(atob('CiAgbGV0IG1lbWJlcnMgPSBKU09OLnBhcnNlKGxvY2FsU3RvcmFnZS5nZXRJdGVtKCJtZW1iZXJzIikpIHx8IHt9OwogIGxldCBjdXJyZW50VXNlciA9ICIiOwoKICBmdW5jdGlvbiBzYXZlTWVtYmVycygpIHsKICAgIGxvY2FsU3RvcmFnZS5zZXRJdGVtKCJtZW1iZXJzIiwgSlNPTi5zdHJpbmdpZnkobWVtYmVycykpOwogIH0KCiAgZnVuY3Rpb24gbG9naW4oKSB7CiAgICBjb25zdCB1c2VyID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoInVzZXJuYW1lIikudmFsdWUudHJpbSgpOwogICAgY29uc3Qga2V5ID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoInVzZXJrZXkiKS52YWx1ZS50cmltKCk7CiAgICBjb25zdCBlcnJvciA9IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJsb2dpbkVycm9yIik7CgogICAgaWYgKHVzZXIgPT09ICJhZG1pbiIgJiYga2V5ID09PSAiYWRtaW4iKSB7CiAgICAgIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJsb2dpbiIpLnN0eWxlLmRpc3BsYXkgPSAibm9uZSI7CiAgICAgIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJhZG1pblBhbmVsIikuc3R5bGUuZGlzcGxheSA9ICJibG9jayI7CiAgICAgIGxvYWRVc2VycygpOwogICAgICByZXR1cm47CiAgICB9CgogICAgaWYgKCFtZW1iZXJzW3VzZXJdKSB7CiAgICAgIGVycm9yLmlubmVyVGV4dCA9ICJUw6BpIGtob+G6o24ga2jDtG5nIHThu5NuIHThuqFpLiI7CiAgICAgIHJldHVybjsKICAgIH0KICAgIGlmIChtZW1iZXJzW3VzZXJdLmtleSAhPT0ga2V5KSB7CiAgICAgIGVycm9yLmlubmVyVGV4dCA9ICJLRVkga2jDtG5nIMSRw7puZy4iOwogICAgICByZXR1cm47CiAgICB9CgogICAgaWYgKG1lbWJlcnNbdXNlcl0uZXhwaXJlcyA9PT0gMCkgewogICAgICBlcnJvci5pbm5lclRleHQgPSAiVMOgaSBraG/huqNuIGNoxrBhIMSRxrDhu6NjIGPhuqVwIHRo4budaSBnaWFuIHPhu60gZOG7pW5nLiBWdWkgbMOybmcgbGnDqm4gaOG7hyBhZG1pbi4iOwogICAgICByZXR1cm47CiAgICB9CgogICAgY29uc3Qgbm93ID0gRGF0ZS5ub3coKTsKICAgIGlmIChub3cgPiBtZW1iZXJzW3VzZXJdLmV4cGlyZXMpIHsKICAgICAgZXJyb3IuaW5uZXJUZXh0ID0gIkjhur90IGjhuqFuIHPhu60gZOG7pW5nLiI7CiAgICAgIHJldHVybjsKICAgIH0KCiAgICBjdXJyZW50VXNlciA9IHVzZXI7CiAgICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgibG9naW4iKS5zdHlsZS5kaXNwbGF5ID0gIm5vbmUiOwogICAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoIm1haW4iKS5zdHlsZS5kaXNwbGF5ID0gImJsb2NrIjsKICAgIHN0YXJ0VGltZXIobWVtYmVyc1t1c2VyXS5leHBpcmVzIC0gbm93KTsKICB9CgogIGZ1bmN0aW9uIHJlZ2lzdGVyKCkgewogICAgY29uc3QgdSA9IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJyZWdVc2VyIikudmFsdWUudHJpbSgpOwogICAgY29uc3QgayA9IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJyZWdLZXkiKS52YWx1ZS50cmltKCk7CiAgICBjb25zdCBtc2cgPSBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgicmVnTXNnIik7CgogICAgaWYgKCF1IHx8ICFrKSB7CiAgICAgIG1zZy5zdHlsZS5jb2xvciA9ICJyZWQiOwogICAgICBtc2cuaW5uZXJUZXh0ID0gIlZ1aSBsw7JuZyBuaOG6rXAgxJHhuqd5IMSR4bunIHTDqm4gdsOgIGtleS4iOwogICAgICByZXR1cm47CiAgICB9CiAgICBpZiAobWVtYmVyc1t1XSkgewogICAgICBtc2cuc3R5bGUuY29sb3IgPSAicmVkIjsKICAgICAgbXNnLmlubmVyVGV4dCA9ICJUw6BpIGtob+G6o24gxJHDoyB04buTbiB04bqhaS4iOwogICAgICByZXR1cm47CiAgICB9CgogICAgbWVtYmVyc1t1XSA9IHsga2V5OiBrLCBleHBpcmVzOiAwIH07CiAgICBzYXZlTWVtYmVycygpOwogICAgbXNnLnN0eWxlLmNvbG9yID0gImdyZWVuIjsKICAgIG1zZy5pbm5lclRleHQgPSAi4pyFIMSQxINuZyBrw70gdGjDoG5oIGPDtG5nISBMacOqbiBo4buHIGFkbWluIMSR4buDIMSRxrDhu6NjIGPhuqVwIHRo4budaSBnaWFuIHPhu60gZOG7pW5nLiI7CiAgfQoKICBmdW5jdGlvbiBhZGRNZW1iZXIoKSB7CiAgICBjb25zdCB1c2VyID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoIm5ld1VzZXIiKS52YWx1ZS50cmltKCk7CiAgICBjb25zdCBrZXkgPSBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgibmV3S2V5IikudmFsdWUudHJpbSgpOwogICAgY29uc3QgaG91cnMgPSBwYXJzZUludChkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgiaG91cnMiKS52YWx1ZSk7CiAgICBpZiAoIXVzZXIgfHwgIWtleSkgcmV0dXJuOwoKICAgIGNvbnN0IGV4cGlyZXMgPSBEYXRlLm5vdygpICsgaG91cnMgKiA2MCAqIDYwICogMTAwMDsKICAgIG1lbWJlcnNbdXNlcl0gPSB7IGtleToga2V5LCBleHBpcmVzOiBleHBpcmVzIH07CiAgICBzYXZlTWVtYmVycygpOwogICAgbG9hZFVzZXJzKCk7CiAgfQoKICBmdW5jdGlvbiBsb2FkVXNlcnMoKSB7CiAgICBjb25zdCB0Ym9keSA9IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJ1c2VyVGFibGUiKTsKICAgIHRib2R5LmlubmVySFRNTCA9ICIiOwogICAgT2JqZWN0LmtleXMobWVtYmVycykuZm9yRWFjaCh1ID0+IHsKICAgICAgY29uc3QgdHIgPSBkb2N1bWVudC5jcmVhdGVFbGVtZW50KCJ0ciIpOwogICAgICBjb25zdCBkID0gbmV3IERhdGUobWVtYmVyc1t1XS5leHBpcmVzKTsKICAgICAgY29uc3Qgc2hvd1RpbWUgPSBtZW1iZXJzW3VdLmV4cGlyZXMgPT09IDAgPyAiQ2jGsGEgY+G6pXAiIDogZC50b0xvY2FsZVN0cmluZygpOwogICAgICB0ci5pbm5lckhUTUwgPSBgPHRkPiR7dX08L3RkPjx0ZD4ke21lbWJlcnNbdV0ua2V5fTwvdGQ+PHRkPiR7c2hvd1RpbWV9PC90ZD5gOwogICAgICB0Ym9keS5hcHBlbmRDaGlsZCh0cik7CiAgICB9KTsKICB9CgogIGZ1bmN0aW9uIHN0YXJ0VGltZXIobXMpIHsKICAgIGNvbnN0IHRpbWVyRGlzcGxheSA9IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJ0aW1lciIpOwogICAgdGltZXJEaXNwbGF5LnN0eWxlLmRpc3BsYXkgPSAiYmxvY2siOwogICAgZnVuY3Rpb24gdXBkYXRlKCkgewogICAgICBpZiAobXMgPD0gMCkgewogICAgICAgIHRpbWVyRGlzcGxheS5pbm5lclRleHQgPSAi4puUIEjhur90IHRo4budaSBnaWFuLiI7CiAgICAgICAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoIm1haW4iKS5zdHlsZS5kaXNwbGF5ID0gIm5vbmUiOwogICAgICAgIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJsb2dpbiIpLnN0eWxlLmRpc3BsYXkgPSAiYmxvY2siOwogICAgICAgIHJldHVybjsKICAgICAgfQogICAgICBsZXQgcyA9IE1hdGguZmxvb3IobXMgLyAxMDAwKTsKICAgICAgbGV0IGhycyA9IE1hdGguZmxvb3IocyAvIDM2MDApOwogICAgICBsZXQgbWlucyA9IE1hdGguZmxvb3IoKHMgJSAzNjAwKSAvIDYwKTsKICAgICAgbGV0IHNlY3MgPSBzICUgNjA7CiAgICAgIHRpbWVyRGlzcGxheS5pbm5lclRleHQgPSBgVGjhu51pIGdpYW4gY8OybiBs4bqhaTogJHtocnN9aCAke21pbnN9bSAke3NlY3MgPCAxMCA/ICIwIiA6ICIifSR7c2Vjc31zYDsKICAgICAgbXMgLT0gMTAwMDsKICAgICAgc2V0VGltZW91dCh1cGRhdGUsIDEwMDApOwogICAgfQogICAgdXBkYXRlKCk7CiAgfQoKICBmdW5jdGlvbiBhbmFseXplKCkgewogICAgY29uc3QgbWQ1ID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ21kNUlucHV0JykudmFsdWUudHJpbSgpLnRvTG93ZXJDYXNlKCk7CiAgICBjb25zdCBsb2FkaW5nID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ2xvYWRpbmcnKTsKICAgIGNvbnN0IHJlc3VsdCAgPSBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgncmVzdWx0Jyk7CiAgICBjb25zdCBwZXJjZW50ID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ3BlcmNlbnQnKTsKICAgIGNvbnN0IGRldGFpbHMgPSBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnZGV0YWlscycpOwoKICAgIGlmICghL15bYS1mMC05XXszMn0kLy50ZXN0KG1kNSkpIHsKICAgICAgcmVzdWx0LnRleHRDb250ZW50ID0gJ+KdjCBNw6MgTUQ1IGtow7RuZyBo4bujcCBs4buHLic7CiAgICAgIHBlcmNlbnQudGV4dENvbnRlbnQgPSAnJzsgZGV0YWlscy50ZXh0Q29udGVudCA9ICcnOwogICAgICByZXR1cm47CiAgICB9CgogICAgbG9hZGluZy5zdHlsZS5kaXNwbGF5ID0gJ2Jsb2NrJzsKICAgIHJlc3VsdC50ZXh0Q29udGVudCA9ICfEkGFuZyBwaMOibiB0w61jaC4uLic7CiAgICBwZXJjZW50LnRleHRDb250ZW50ID0gJyc7IGRldGFpbHMudGV4dENvbnRlbnQgPSAnJzsKCiAgICBzZXRUaW1lb3V0KCgpID0+IHsKICAgICAgY29uc3QgbGFzdDUgPSBtZDUuc2xpY2UoLTUpOwogICAgICBsZXQgc3VtID0gMDsKICAgICAgZm9yIChjb25zdCBjIG9mIGxhc3Q1KSBzdW0gKz0gcGFyc2VJbnQoYywgMTYpOwoKICAgICAgY29uc3QgdGFpID0gc3VtICUgMiA9PT0gMDsKICAgICAgcmVzdWx0LnRleHRDb250ZW50ID0gYOKchSBE4buxIMSRb8OhbjogJHt0YWkgPyAiVMOASSIgOiAiWOG7iFUifWA7CiAgICAgIHBlcmNlbnQudGV4dENvbnRlbnQgPSBgWMOhYyBzdeG6pXQ6IFTDgEkgJHt0YWkgPyAi4omIIDY1JSIgOiAi4omIIDM1JSJ9LCBY4buIVSAke3RhaSA/ICLiiYggMzUlIiA6ICLiiYggNjUlIn1gOwogICAgICBkZXRhaWxzLmlubmVySFRNTCA9IGBQaMOibiB0w61jaDogNSBrw70gdOG7sSBjdeG7kWkgPGI+JHtsYXN0NX08L2I+IOKGkiBU4buVbmcgPSA8Yj4ke3N1bX08L2I+IOKGkiAke3N1bX0gJSAyID0gJHtzdW0gJSAyfWA7CiAgICAgIGxvYWRpbmcuc3R5bGUuZGlzcGxheSA9ICdub25lJzsKICAgIH0sIDEwMDApOwogIH0K'))</script><script>
+  setInterval(function () {
+    if (window.outerWidth - window.innerWidth > 160 ||
+        window.outerHeight - window.innerHeight > 160) {
+      document.body.innerHTML = '<h1>Bạn không được mở DevTools!</h1>';
+    }
+  }, 1000);
